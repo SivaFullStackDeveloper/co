@@ -1,0 +1,123 @@
+🚀 Step-by-Step Guide: Setting Up a Coturn (TURN/STUN) Server on DigitalOcean
+This guide will help you set up, configure, and test your own TURN/STUN server on DigitalOcean.
+
+🔹 Step 1: Create a DigitalOcean Droplet
+Go to DigitalOcean Console
+Click "Create" → "Droplets"
+Choose Ubuntu 22.04 LTS as the OS
+Select the cheapest plan (Basic, $4/month)
+Enable IPv4 (Public IP needed)
+Set up SSH Key or Password
+Click "Create Droplet"
+Once created, copy the Droplet’s Public IP (Example: 24.199.85.25)
+🔹 Step 2: Connect to Your Server via SSH
+Run the following command from your local machine:
+
+sh
+Copy
+Edit
+ssh root@your-droplet-ip
+(Replace your-droplet-ip with your actual DigitalOcean VPS Public IP)
+
+🔹 Step 3: Install Coturn
+Run the following commands to install Coturn:
+
+sh
+Copy
+Edit
+sudo apt update && sudo apt install coturn -y
+Enable Coturn to start on boot:
+
+sh
+Copy
+Edit
+sudo systemctl enable coturn
+🔹 Step 4: Configure Coturn
+Now, edit the Coturn configuration file:
+
+sh
+Copy
+Edit
+sudo nano /etc/turnserver.conf
+Paste the following configuration:
+arduino
+Copy
+Edit
+listening-port=3478
+tls-listening-port=5349
+fingerprint
+use-auth-secret
+static-auth-secret=your_secret_key
+realm=your-domain.com
+total-quota=100
+bps-capacity=0
+stale-nonce=600
+no-loopback-peers
+no-multicast-peers
+min-port=49152
+max-port=65535
+🔹 Important:
+
+Replace your_secret_key with a strong password
+Replace your-domain.com with your actual domain or DigitalOcean IP
+Save and Exit:
+Press CTRL+X, then Y, then Enter
+
+🔹 Step 5: Open Firewall Ports
+Run these commands to allow WebRTC traffic:
+
+sh
+Copy
+Edit
+sudo ufw allow 3478/udp  
+sudo ufw allow 5349/tcp  
+sudo ufw allow 49152:65535/udp  
+sudo ufw enable
+🔹 Step 6: Restart Coturn
+sh
+Copy
+Edit
+sudo systemctl restart coturn
+Check if Coturn is running:
+
+sh
+Copy
+Edit
+sudo systemctl status coturn
+If it says "Active: running", your server is working! 🎉
+
+🔹 Step 7: Use Coturn in Your WebRTC App
+Now, use this ICE Server configuration in your WebRTC app:
+
+javascript
+Copy
+Edit
+const iceServers = [
+  { urls: "stun:24.199.85.25:3478" },
+  {
+    urls: "turn:24.199.85.25:3478",
+    username: "user",
+    credential: "your_secret_key",
+  },
+];
+🔹 Replace your_secret_key with the actual auth secret you set in turnserver.conf.
+
+🔹 Step 8: Test Your TURN/STUN Server
+Test STUN
+Run this on your VPS:
+
+sh
+Copy
+Edit
+stunclient 24.199.85.25 3478
+Test TURN
+Use this command to check if your TURN server works:
+
+sh
+Copy
+Edit
+turnutils_uclient -p 3478 -u user -w your_secret_key 24.199.85.25
+✅ Next Steps
+Want SSL (HTTPS) for TURN? Let me know!
+Need help testing WebRTC connections? I can guide you! 🚀
+Let me know if you have any errors or issues! 😊
